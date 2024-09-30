@@ -139,8 +139,8 @@ async def liked_songs(ctx, likedsongslimit):
     logging.debug(f"Liked Songs command from {ctx.author}")
 
     member = ctx.author
-    
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', {member.id})
+
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (member.id))
     result = cursor.fetchone()
 
     if result:
@@ -158,7 +158,7 @@ async def liked_songs(ctx, likedsongslimit):
             for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                 track = item['track']
                 await ctx.send(idx, track['artists'][0]['name'], " – ", track['name'], "-->", track['id'])
-                time.sleep(0.15)
+                await asyncio.sleep(0.15)
                 fetched_songs += 1
             # Since the limit for the api is 50, you need to use an offset to go past this limit
             offset += limit
