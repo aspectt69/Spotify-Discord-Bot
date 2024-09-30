@@ -84,30 +84,26 @@ def spotify_callback():
                                 redirect_uri='https://spotify-authentication.onrender.com/callback',
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private",
                                 state=state)
-    
-    token_info = auth_manager.get_access_token(code)
-
-    #Store the users token
-    store_token(state, token_info['access_token'])
 
     if token_info and 'access_token' in token_info:
         # Store the user's token
         try:
-            store_token(state, token_info['access_token'])
-            cursor.execute('SELECT * FROM tokens WHERE user_id = ?', (state))
-            result = cursor.fetchone()
-            if result:
-                print("Found id")
-                return "Authentication complete! You can return to discord"
+            token_info = auth_manager.get_access_token(code)
+
+            #Store the users token
+            if token_info and 'access_token' in token_info:
+                try:
+                    store_token(state, token_info['access_token'])
+                    return "Authentication complete! You can return to discord"
+                except:
+                    print("error 69")
+                    return "error 69", token_info
             else:
-                print("error 1")
-                return "Authentication failed. Please try again."
-        except:
-            print("error 2")
-            return "Failed. Try again"
-    else:
-        print("error 3")
-        return "Authentication failed. Please try again."
+                print("Failed to retrieve token_info:", token_info)
+                return "Failed to retrieve token. Please try again."
+        except Exception as e:
+            print(f"error 2: {e}")
+            return "Failed. Try again:", (e)
 
 def run_flask():
     app.run(host="0.0.0.0", port=8888)
