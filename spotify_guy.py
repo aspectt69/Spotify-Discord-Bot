@@ -147,15 +147,17 @@ async def liked_songs(ctx, likedsongslimit: int):
             limit = min(50, remaining_songs)
             likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
             # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
+            await ctx.send("Number | Artist | Song Name | Link To Song")
+            await ctx.send("** **")
             for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                 track = item['track']
-                await ctx.send(f"{idx} {track['artists'][0]['name']}  –  {track['name']} --> {track['id']}")
+                await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['id']}")
                 await asyncio.sleep(0.15)
                 fetched_songs += 1
             # Since the limit for the api is 50, you need to use an offset to go past this limit
             offset += limit
         else:
-            await ctx.send("")
+            await ctx.send("** **")
             await ctx.send(f"All tracks printed.")
     else:
         logging.debug("Couldn't find this users stats")
