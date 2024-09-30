@@ -71,9 +71,9 @@ def store_token(user_id, token):
             encrypted_token = encrypt_data(token)
             cursor.execute('INSERT OR REPLACE INTO tokens (user_id, token) VALUES (?, ?)', (user_id, encrypted_token))
             connection.commit()
-            logging.debug("Inserting error")
-        except:
             logging.debug("Done inserting")
+        except:
+            logging.debug("Inserting error")
         logging.debug(f"Successfully added the user token into database")
     except:
         logging.debug("Token storing error")
@@ -131,6 +131,41 @@ async def spotify_login(ctx):
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
     await ctx.send(f"Authenticate your account here (If nothing happens just wait 1-2 mins): {auth_url}")
+
+@bot.command()
+async def liked_songs(ctx, limit):
+    global auth_manager
+
+    logging.debug(f"Liked Songs command from {ctx.author}")
+
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (ctx.author))
+    result = cursor.fetchone()
+
+    if result:
+        logging.debug("Found a result for users token")
+        limit = 50
+        offset = 0
+        fetched_songs = 0
+
+        # Checks if its printed all the songs the user requested
+        while fetched_songs < limit:
+            remaining_songs = limit - fetched_songs
+            limit = min(50, remaining_songs)
+            likedsongs = auth_manager.current_user_saved_tracks(limit=limit, offset=offset)
+            # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
+            for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
+                track = item['track']
+                await ctx.send(idx, track['artists'][0]['name'], " – ", track['name'], "-->", track['id'])
+                time.sleep(0.15)
+                fetched_songs += 1
+            # Since the limit for the api is 50, you need to use an offset to go past this limit
+            offset += limit
+        else:
+            await ctx.send("")
+            await ctx.send("All tracks printed!")
+    else:
+        logging.debug("Couldn't find this users stats")
+        await ctx.send("I couldn't find your spotify stats! Try '!spotify_login' to link your spotify then retry")
 
 threading.Thread(target=run_flask).start()
 bot.run(bot_token)
