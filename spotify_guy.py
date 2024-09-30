@@ -46,6 +46,11 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+auth_manager = SpotifyOAuth(client_id=client_id,
+                            client_secret=client_secret,
+                            redirect_uri='https://spotify-authentication.onrender.com/callback',
+                            scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
+
 db_directory = "spotify_bot"
 if not os.path.exists(db_directory):
     os.makedirs(db_directory)
@@ -88,30 +93,20 @@ def spotify_callback():
     code = request.args.get('code')
     state = request.args.get('state')
 
-    auth_manager = SpotifyOAuth(client_id=client_id,
-                                client_secret=client_secret,
-                                redirect_uri='https://spotify-authentication.onrender.com/callback',
-                                scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private",
-                                state=state)
-
     # Store the user's token
     try:
         token_info = auth_manager.get_access_token(code)
 
-        #Store the users token
         if token_info and 'access_token' in token_info:
-            try:
-                store_token(state, token_info['access_token'])
-                return "Authentication complete! You can return to discord"
-            except:
-                logging.debug("error 69")
-                return "error 69", token_info
+            # Store the user's token in the database
+            store_token(state, token_info['access_token'])
+            return "Authentication complete! You can return to Discord."
         else:
-            logging.debug("Failed to retrieve token_info:", token_info)
+            logging.debug("Couldnt retrieve token_info:", token_info)
             return "Failed to retrieve token. Please try again."
     except Exception as e:
-        logging.debug(f"error 2: {e}")
-        return "Failed. Try again:", (e)
+        logging.debug(f"Error during token retrieval: {e}")
+        return f"Failed. Try again: {e}"
 
 def run_flask():
     app.run(host="0.0.0.0", port=8888)
@@ -124,10 +119,6 @@ async def on_ready():
 async def spotify_login(ctx):
     logging.debug(f"Login command received from {ctx.author}")
     user_id = str(ctx.author.id)
-    auth_manager = SpotifyOAuth(client_id=client_id,
-                                client_secret=client_secret,
-                                redirect_uri='https://spotify-authentication.onrender.com/callback',
-                                scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
     await ctx.send(f"{ctx.author.mention}, Authenticate your account here (If nothing happens just wait): {auth_url}")
@@ -136,16 +127,18 @@ async def spotify_login(ctx):
 async def liked_songs(ctx, likedsongslimit: int):
     global auth_manager
 
+    user_id = ctx.author.id
+    token = get_token(user_id)
+
     logging.debug(f"Liked Songs command from {ctx.author}")
 
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (ctx.author.id,))
-    result = cursor.fetchone()
-
-    if result:
+    if token:
         logging.debug("Found a result for users token")
         limit = 50
         offset = 0
         fetched_songs = 0
+
+        await ctx.send(f"{ctx.author.mention}, here's your {likedsongslimit} most recent liked songs!")
 
         # Checks if its printed all the songs the user requested
         while fetched_songs < likedsongslimit:
@@ -162,7 +155,7 @@ async def liked_songs(ctx, likedsongslimit: int):
             offset += limit
         else:
             await ctx.send("")
-            await ctx.send(f"All of {ctx.author.mention}'s tracks printed!")
+            await ctx.send(f"All tracks printed.")
     else:
         logging.debug("Couldn't find this users stats")
         await ctx.send(f"I couldn't find your spotify stats {ctx.author.mention}! Try '!spotify_login' to link your spotify then retry")
