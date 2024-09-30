@@ -79,7 +79,7 @@ def store_token(user_id, token):
         logging.debug("Token storing error")
 
 def get_token(user_id):
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (user_id))
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (user_id,))
     result = cursor.fetchone()
     return decrypt_data(result[0]) if result else None
 
@@ -138,9 +138,7 @@ async def liked_songs(ctx, likedsongslimit):
 
     logging.debug(f"Liked Songs command from {ctx.author}")
 
-    member = ctx.author
-
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (member.id))
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (ctx.author.id,))
     result = cursor.fetchone()
 
     if result:
