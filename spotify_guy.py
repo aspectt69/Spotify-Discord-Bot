@@ -125,42 +125,43 @@ async def spotify_login(ctx):
 
 @bot.command()
 async def liked_songs(ctx, likedsongslimit: int):
-    global auth_manager
-
     user_id = ctx.author.id
     token = get_token(user_id)
 
     logging.debug(f"Liked Songs command from {ctx.author}")
 
     if token:
-        logging.debug("Found a result for users token")
-        sp = spotipy.Spotify(auth=token)
-        limit = 50
-        offset = 0
-        fetched_songs = 0
+        try:
+            logging.debug(f"Found a result for users token: {token}")
+            sp = spotipy.Spotify(auth=token)
+            limit = 50
+            offset = 0
+            fetched_songs = 0
 
-        await ctx.send(f"{ctx.author.mention}, here's your {likedsongslimit} most recent liked songs!")
+            await ctx.send(f"{ctx.author.mention}, here's your {likedsongslimit} most recent liked songs!")
 
-        # Checks if its printed all the songs the user requested
-        while fetched_songs < likedsongslimit:
-            remaining_songs = likedsongslimit - fetched_songs
-            limit = min(50, remaining_songs)
-            likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
-            # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
-            await ctx.send("Number | Artist | Song Name | Link To Song")
-            await ctx.send("** **")
-            for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
-                track = item['track']
-                await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['href']}")
-                await asyncio.sleep(0.15)
-                fetched_songs += 1
-            # Since the limit for the api is 50, you need to use an offset to go past this limit
-            offset += limit
+            # Checks if its printed all the songs the user requested
+            while fetched_songs < likedsongslimit:
+                remaining_songs = likedsongslimit - fetched_songs
+                limit = min(50, remaining_songs)
+                likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
+                # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
+                await ctx.send("Number | Artist | Song Name | Link To Song")
+                await ctx.send("** **")
+                for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
+                    track = item['track']
+                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['href']}")
+                    await asyncio.sleep(0.15)
+                    fetched_songs += 1
+                # Since the limit for the api is 50, you need to use an offset to go past this limit
+                offset += limit
+        except:
+            logging.debug("User Token error")
         else:
             await ctx.send("** **")
             await ctx.send(f"All tracks printed.")
     else:
-        logging.debug("Couldn't find this users stats")
+        logging.debug(f"Couldn't find this users stats {token}")
         await ctx.send(f"I couldn't find your spotify stats {ctx.author.mention}! Try '!spotify_login' to link your spotify then retry")
 
 threading.Thread(target=run_flask).start()
