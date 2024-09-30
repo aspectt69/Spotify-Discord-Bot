@@ -84,23 +84,41 @@ def spotify_callback():
                                 redirect_uri='https://spotify-authentication.onrender.com/callback',
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private",
                                 state=state)
+    
     token_info = auth_manager.get_access_token(code)
 
     #Store the users token
     store_token(state, token_info['access_token'])
 
-    return "Authentication complete! You can return to discord"
+    if token_info and 'access_token' in token_info:
+        # Store the user's token
+        try:
+            store_token(state, token_info['access_token'])
+            cursor.execute('SELECT * FROM tokens WHERE user_id = ?', (state))
+            result = cursor.fetchone()
+            if result:
+                print("Found id")
+                return "Authentication complete! You can return to discord"
+            else:
+                print("error 1")
+                return "Authentication failed. Please try again."
+        except:
+            print("error 2")
+            return "Failed. Try again"
+    else:
+        print("error 3")
+        return "Authentication failed. Please try again."
 
 def run_flask():
     app.run(host="0.0.0.0", port=8888)
 
 @bot.event
-async def on_ready():
+async def on_ready(): 
     print(f"{bot.user} is ready")
 
 @bot.command()
 async def spotify_login(ctx):
-    print("fLogin command received from {ctx.author}")
+    print(f"Login command received from {ctx.author}")
     user_id = str(ctx.author.id)
     auth_manager = SpotifyOAuth(client_id=client_id,
                                 client_secret=client_secret,
@@ -108,7 +126,7 @@ async def spotify_login(ctx):
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
-    await ctx.send(f"Authenticate your account here: {auth_url}")
+    await ctx.send(f"Authenticate your account here (If nothing happens just wait 1-2 mins): {auth_url}")
 
 threading.Thread(target=run_flask).start()
 bot.run(bot_token)
