@@ -85,25 +85,24 @@ def spotify_callback():
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private",
                                 state=state)
 
-    if token_info and 'access_token' in token_info:
-        # Store the user's token
-        try:
-            token_info = auth_manager.get_access_token(code)
+    # Store the user's token
+    try:
+        token_info = auth_manager.get_access_token(code)
 
-            #Store the users token
-            if token_info and 'access_token' in token_info:
-                try:
-                    store_token(state, token_info['access_token'])
-                    return "Authentication complete! You can return to discord"
-                except:
-                    print("error 69")
-                    return "error 69", token_info
-            else:
-                print("Failed to retrieve token_info:", token_info)
-                return "Failed to retrieve token. Please try again."
-        except Exception as e:
-            print(f"error 2: {e}")
-            return "Failed. Try again:", (e)
+        #Store the users token
+        if token_info and 'access_token' in token_info:
+            try:
+                store_token(state, token_info['access_token'])
+                return "Authentication complete! You can return to discord"
+            except:
+                print("error 69")
+                return "error 69", token_info
+        else:
+            print("Failed to retrieve token_info:", token_info)
+            return "Failed to retrieve token. Please try again."
+    except Exception as e:
+        print(f"error 2: {e}")
+        return "Failed. Try again:", (e)
 
 def run_flask():
     app.run(host="0.0.0.0", port=8888)
