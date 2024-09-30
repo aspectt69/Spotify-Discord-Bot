@@ -44,7 +44,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-connection = sqlite3.connect('discord_bots/spotify_tokens.db', check_same_thread=False)
+connection = sqlite3.connect('spotify_bot/spotify_tokens.db', check_same_thread=False)
 cursor = connection.cursor()
 
 # Creates a table in the database that stores tokens
