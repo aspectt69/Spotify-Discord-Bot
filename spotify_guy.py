@@ -81,7 +81,7 @@ def spotify_callback():
 
     auth_manager = SpotifyOAuth(client_id=client_id,
                                 client_secret=client_secret,
-                                redirect_uri='http://localhost:8888/callback',
+                                redirect_uri='https://spotify-authentication.onrender.com',
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private",
                                 state=state)
     token_info = auth_manager.get_access_token(code)
@@ -104,7 +104,7 @@ async def spotify_login(ctx):
     user_id = str(ctx.author.id)
     auth_manager = SpotifyOAuth(client_id=client_id,
                                 client_secret=client_secret,
-                                redirect_uri='http://localhost:8888/callback',
+                                redirect_uri='https://spotify-authentication.onrender.com',
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
