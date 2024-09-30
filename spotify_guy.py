@@ -130,15 +130,22 @@ async def spotify_login(ctx):
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
-    await ctx.send(f"Authenticate your account here (If nothing happens just wait 1-2 mins): {auth_url}")
+    await ctx.send(f"Authenticate your account here (If nothing happens just wait): {auth_url}")
 
 @bot.command()
-async def liked_songs(ctx, limit):
+async def liked_songs(ctx, likedsongslimit):
     global auth_manager
 
     logging.debug(f"Liked Songs command from {ctx.author}")
 
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (ctx.author))
+    if likedsongslimit:
+        likedsongslimit = likedsongslimit
+        logging.debug("Limit received")
+    else:
+        likedsongslimit = 50
+        logging.debug("Limit not received, defaulting to 50")
+
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', {ctx.author})
     result = cursor.fetchone()
 
     if result:
@@ -148,8 +155,8 @@ async def liked_songs(ctx, limit):
         fetched_songs = 0
 
         # Checks if its printed all the songs the user requested
-        while fetched_songs < limit:
-            remaining_songs = limit - fetched_songs
+        while fetched_songs < likedsongslimit:
+            remaining_songs = likedsongslimit - fetched_songs
             limit = min(50, remaining_songs)
             likedsongs = auth_manager.current_user_saved_tracks(limit=limit, offset=offset)
             # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
