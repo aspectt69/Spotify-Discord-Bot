@@ -48,7 +48,7 @@ db_directory = "spotify_bot"
 if not os.path.exists(db_directory):
     os.makedirs(db_directory)
 
-connection = sqlite3.connect(db_directory, 'spotify_tokens.db', check_same_thread=False)
+connection = sqlite3.connect(os.path.join(db_directory, 'spotify_tokens.db'), check_same_thread=False)
 cursor = connection.cursor()
 
 # Creates a table in the database that stores tokens
