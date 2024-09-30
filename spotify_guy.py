@@ -130,10 +130,10 @@ async def spotify_login(ctx):
                                 scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private")
     
     auth_url = auth_manager.get_authorize_url(state=user_id)
-    await ctx.send(f"Authenticate your account here (If nothing happens just wait): {auth_url}")
+    await ctx.send(f"{ctx.author.mention}, Authenticate your account here (If nothing happens just wait): {auth_url}")
 
 @bot.command()
-async def liked_songs(ctx, likedsongslimit):
+async def liked_songs(ctx, likedsongslimit: int):
     global auth_manager
 
     logging.debug(f"Liked Songs command from {ctx.author}")
@@ -162,10 +162,10 @@ async def liked_songs(ctx, likedsongslimit):
             offset += limit
         else:
             await ctx.send("")
-            await ctx.send("All tracks printed!")
+            await ctx.send(f"All of {ctx.author.mention}'s tracks printed!")
     else:
         logging.debug("Couldn't find this users stats")
-        await ctx.send("I couldn't find your spotify stats! Try '!spotify_login' to link your spotify then retry")
+        await ctx.send(f"I couldn't find your spotify stats {ctx.author.mention}! Try '!spotify_login' to link your spotify then retry")
 
 threading.Thread(target=run_flask).start()
 bot.run(bot_token)
