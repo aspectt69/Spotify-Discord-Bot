@@ -88,7 +88,6 @@ python-dotenv==1.0.1
 python-http-client==3.3.7
 pytweening==1.2.0
 pytz==2024.1
-pywin32==306
 pywin32-ctypes==0.2.2
 pyzmq==26.0.3
 redis==5.1.0
