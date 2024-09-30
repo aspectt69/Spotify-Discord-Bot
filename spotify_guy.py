@@ -10,6 +10,7 @@ from flask import Flask, request
 import threading
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -22,6 +23,7 @@ client_secret = os.getenv('CLIENT_SECRET')
 if not all([[bot_token, client_id, client_secret, encryption_key]]):
     raise ValueError("One or more required environment variables are missing.")
 
+logging.basicConfig(level=logging.DEBUG)
 cipher = Fernet(encryption_key.encode())
 
 # Function to encrypt data
@@ -64,10 +66,17 @@ connection.commit()
 app = Flask(__name__)
 
 def store_token(user_id, token):
-    encrypted_token = encrypt_data(token)
-    cursor.execute('INSERT OR REPLACE INTO tokens (user_id, token) VALUES (?, ?)', (user_id, encrypted_token))
-    connection.commit()
-    print(f"Successfully added the user token into database")
+    try:
+        try:
+            encrypted_token = encrypt_data(token)
+            cursor.execute('INSERT OR REPLACE INTO tokens (user_id, token) VALUES (?, ?)', (user_id, encrypted_token))
+            connection.commit()
+            logging.debug("Inserting error")
+        except:
+            logging.debug("Done inserting")
+        logging.debug(f"Successfully added the user token into database")
+    except:
+        logging.debug("Token storing error")
 
 def get_token(user_id):
     cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (user_id))
@@ -95,13 +104,13 @@ def spotify_callback():
                 store_token(state, token_info['access_token'])
                 return "Authentication complete! You can return to discord"
             except:
-                print("error 69")
+                logging.debug("error 69")
                 return "error 69", token_info
         else:
-            print("Failed to retrieve token_info:", token_info)
+            logging.debug("Failed to retrieve token_info:", token_info)
             return "Failed to retrieve token. Please try again."
     except Exception as e:
-        print(f"error 2: {e}")
+        logging.debug(f"error 2: {e}")
         return "Failed. Try again:", (e)
 
 def run_flask():
@@ -109,11 +118,11 @@ def run_flask():
 
 @bot.event
 async def on_ready(): 
-    print(f"{bot.user} is ready")
+    logging.debug(f"{bot.user} is ready")
 
 @bot.command()
 async def spotify_login(ctx):
-    print(f"Login command received from {ctx.author}")
+    logging.debug(f"Login command received from {ctx.author}")
     user_id = str(ctx.author.id)
     auth_manager = SpotifyOAuth(client_id=client_id,
                                 client_secret=client_secret,
