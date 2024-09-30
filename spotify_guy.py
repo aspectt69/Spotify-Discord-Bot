@@ -134,6 +134,7 @@ async def liked_songs(ctx, likedsongslimit: int):
 
     if token:
         logging.debug("Found a result for users token")
+        sp = spotipy.Spotify(auth=token)
         limit = 50
         offset = 0
         fetched_songs = 0
@@ -144,7 +145,7 @@ async def liked_songs(ctx, likedsongslimit: int):
         while fetched_songs < likedsongslimit:
             remaining_songs = likedsongslimit - fetched_songs
             limit = min(50, remaining_songs)
-            likedsongs = auth_manager.current_user_saved_tracks(limit=limit, offset=offset)
+            likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
             # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
             for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                 track = item['track']
