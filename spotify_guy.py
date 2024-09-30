@@ -149,7 +149,7 @@ async def liked_songs(ctx, likedsongslimit: int):
             # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
             for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                 track = item['track']
-                await ctx.send(idx, track['artists'][0]['name'], " – ", track['name'], "-->", track['id'])
+                await ctx.send(f"{idx} {track['artists'][0]['name']}  –  {track['name']} --> {track['id']}")
                 await asyncio.sleep(0.15)
                 fetched_songs += 1
             # Since the limit for the api is 50, you need to use an offset to go past this limit
