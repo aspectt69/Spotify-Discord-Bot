@@ -138,14 +138,9 @@ async def liked_songs(ctx, likedsongslimit):
 
     logging.debug(f"Liked Songs command from {ctx.author}")
 
-    if likedsongslimit:
-        likedsongslimit = likedsongslimit
-        logging.debug("Limit received")
-    else:
-        likedsongslimit = 50
-        logging.debug("Limit not received, defaulting to 50")
-
-    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', {ctx.author})
+    member = ctx.author
+    
+    cursor.execute('SELECT token FROM tokens WHERE user_id = ?', {member.id})
     result = cursor.fetchone()
 
     if result:
