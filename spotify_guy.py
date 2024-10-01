@@ -86,7 +86,26 @@ def store_token(user_id, token):
 def get_token(user_id):
     cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (user_id,))
     result = cursor.fetchone()
-    return decrypt_data(result[0]) if result else logging.debug("Couldn't get the token")
+    if result:
+        encrypted_token = result[0]
+        decrypted_token = decrypt_data(encrypted_token)
+        
+        auth_manager = SpotifyOAuth(client_id=client_id, client_secret=client_secret)
+        token_info = auth_manager.validate_token({"access_token": decrypted_token})
+        
+        if token_info:
+            return decrypted_token
+        else:
+            try:
+                new_token = auth_manager.refresh_access_token(decrypted_token)
+                store_token(user_id, new_token['access_token'])
+                return new_token['access_token']
+            except Exception as e:
+                logging.error(f"Error refreshing token: {e}")
+                return None
+    else:
+        logging.debug("Couldn't get the token")
+        return None
 
 @app.route("/callback")
 def spotify_callback():
@@ -133,7 +152,10 @@ async def liked_songs(ctx, likedsongslimit: int):
     if token:
         try:
             logging.debug(f"Found a result for users token: {token}")
-            sp = spotipy.Spotify(auth=token)
+            sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=client_id,
+                                               client_secret=client_secret,
+                                               redirect_uri='https://spotify-authentication.onrender.com/callback',
+                                               scope="user-library-read user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read playlist-read-private"))
             limit = 50
             offset = 0
             fetched_songs = 0
