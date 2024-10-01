@@ -95,7 +95,7 @@ def spotify_callback():
 
     # Store the user's token
     try:
-        token_info = auth_manager.get_access_token(code)
+        token_info = auth_manager.get_access_token(code, check_cache=False)
 
         if token_info and 'access_token' in token_info:
             # Store the user's token in the database
@@ -144,13 +144,16 @@ async def liked_songs(ctx, likedsongslimit: int):
             while fetched_songs < likedsongslimit:
                 remaining_songs = likedsongslimit - fetched_songs
                 limit = min(50, remaining_songs)
-                likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
+                try:
+                    likedsongs = sp.current_user_saved_tracks(limit=limit, offset=offset)
+                except spotipy.exceptions.SpotifyException as e:
+                    logging.error(f"Spotify API error: {e}")
                 # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
                 await ctx.send("Number | Artist | Song Name | Link To Song")
                 await ctx.send("** **")
                 for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                     track = item['track']
-                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['href']}")
+                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['spotify']}")
                     await asyncio.sleep(0.15)
                     fetched_songs += 1
                 # Since the limit for the api is 50, you need to use an offset to go past this limit
@@ -160,6 +163,7 @@ async def liked_songs(ctx, likedsongslimit: int):
         else:
             await ctx.send("** **")
             await ctx.send(f"All tracks printed.")
+            logging.debug("Successful print")
     else:
         logging.debug(f"Couldn't find this users stats {token}")
         await ctx.send(f"I couldn't find your spotify stats {ctx.author.mention}! Try '!spotify_login' to link your spotify then retry")
