@@ -175,7 +175,7 @@ async def liked_songs(ctx, likedsongslimit: int):
                 await ctx.send("** **")
                 for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                     track = item['track']
-                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['spotify']}")
+                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['external_urls']}")
                     await asyncio.sleep(0.15)
                     fetched_songs += 1
                 await logging.debug("Tracks printed")
