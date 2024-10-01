@@ -151,14 +151,12 @@ async def liked_songs(ctx, likedsongslimit: int):
                 # For everything in liked songs, it prints the track name, id, and artist, until it's gone through the limit
                 await ctx.send("Number | Artist | Song Name | Link To Song")
                 await ctx.send("** **")
-                try:
-                    for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
-                        track = item['track']
-                        await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['spotify']}")
-                        await asyncio.sleep(0.15)
-                        fetched_songs += 1
-                except:
-                    logging.debug("Error printing liked songs")
+                for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
+                    track = item['track']
+                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['spotify']}")
+                    await asyncio.sleep(0.15)
+                    fetched_songs += 1
+                await logging.debug("Tracks printed")
                 # Since the limit for the api is 50, you need to use an offset to go past this limit
                 offset += limit
         except:
