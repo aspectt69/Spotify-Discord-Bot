@@ -86,7 +86,11 @@ def store_token(user_id, token):
 def get_token(user_id):
     cursor.execute('SELECT token FROM tokens WHERE user_id = ?', (user_id,))
     result = cursor.fetchone()
-    return decrypt_data(result[0]) if result else logging.debug("Couldn't get the token")
+    if result:
+        return decrypt_data(result[0]) if result else logging.debug("Couldn't get the token")
+    else:
+        logging.debug("Error getting the token")
+        return None
 
 @app.route("/callback")
 def spotify_callback():
@@ -154,7 +158,7 @@ async def liked_songs(ctx, likedsongslimit: int):
                 logging.debug(f"About to send: {track['artists'][0]['name']}  –  {track['name']}")
                 for idx, item in enumerate(likedsongs['items'], start=fetched_songs + 1):
                     track = item['track']
-                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['external_urls']}")
+                    await ctx.send(f"{idx}. {track['artists'][0]['name']}  –  {track['name']} --> {track['external_urls']['spotify']}")
                     await asyncio.sleep(0.15)
                     fetched_songs += 1
                 logging.debug("Tracks printed")
@@ -169,6 +173,28 @@ async def liked_songs(ctx, likedsongslimit: int):
     else:
         logging.debug(f"Couldn't find this users stats {token}")
         await ctx.send(f"I couldn't find your spotify stats {ctx.author.mention}! Try '!spotify_login' to link your spotify then retry")
+
+@bot.command()
+async def database_check(ctx):
+    # Retrieve all rows from the database
+    cursor.execute('SELECT user_id, token FROM tokens')
+    rows = cursor.fetchall()
+
+    if rows:
+        for row in rows:
+            user_id = row[0]
+            encrypted_token = row[1]
+            try:
+                decrypted_token = decrypt_data(encrypted_token)
+                # Log the decrypted token and user ID
+                logging.debug(f"User ID: {user_id}, Decrypted Token: {decrypted_token}")
+            except Exception as e:
+                logging.error(f"Error decrypting token for user {user_id}: {e}")
+        await ctx.send(f"Database check complete. Results logged.")
+    else:
+        logging.debug("No tokens found in the database.")
+        await ctx.send(f"No tokens found in the database.")
+
 
 threading.Thread(target=run_flask).start()
 bot.run(bot_token)
